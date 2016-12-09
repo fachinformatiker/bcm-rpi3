@@ -1,0 +1,4 @@
+[submodule "kernel"]
+	path = kernel
+	url = https://github.com/nethunteros/re4son-raspberrypi-linux
+	brach = rpi-4.1.y-re4son
