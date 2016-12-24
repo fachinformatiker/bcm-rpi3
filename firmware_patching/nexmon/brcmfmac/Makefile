@@ -17,7 +17,7 @@
 
 ccflags-y += \
 	-Idrivers/net/wireless/brcm80211/brcmfmac	\
-	-I$(NEXMON_ROOT)/kernel/drivers/net/wireless/brcm80211/include
+	-I$(NEXMON_ROOT)/firmware_patching/nexmon/brcmfmac/include
 
 ccflags-y += -D__CHECK_ENDIAN__
 
