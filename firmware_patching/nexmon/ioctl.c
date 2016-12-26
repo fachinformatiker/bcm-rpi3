@@ -32,30 +32,47 @@
  *                                                                         *
  **************************************************************************/
 
-#ifndef FIRMWARE_VERSION_H
-#define FIRMWARE_VERSION_H
+#pragma NEXMON targetregion "patch"
 
-#define CHIP_VER_ALL                        0
-#define CHIP_VER_BCM4339                    1
-#define CHIP_VER_BCM4330                    2
-#define CHIP_VER_BCM4358                    3
-#define CHIP_VER_BCM43438                   4
+#include <firmware_version.h>   // definition of firmware version macros
+#include <debug.h>              // contains macros to access the debug hardware
+#include <wrapper.h>            // wrapper definitions for functions that already exist in the firmware
+#include <structs.h>            // structures that are used by the code in the firmware
+#include <helper.h>             // useful helper functions
+#include <patcher.h>            // macros used to craete patches such as BLPatch, BPatch, ...
+#include <rates.h>              // rates used to build the ratespec for frame injection
+#include <nexioctls.h>          // ioctls added in the nexmon patch
+#include <capabilities.h>       // capabilities included in a nexmon patch
+#include <sendframe.h>          // sendframe functionality
 
-#define FW_VER_ALL                          0
+int 
+wlc_ioctl_hook(struct wlc_info *wlc, int cmd, char *arg, int len, void *wlc_if)
+{
+    int ret = IOCTL_ERROR;
 
-// for CHIP_VER_BCM4339
-#define FW_VER_6_37_32_RC23_34_40_r581243   10
-#define FW_VER_6_37_32_RC23_34_43_r639704   11
+    switch (cmd) {
+        case NEX_GET_CAPABILITIES:
+            if (len == 4) {
+                memcpy(arg, &capabilities, 4);
+                ret = IOCTL_SUCCESS;
+            }
+            break;
 
-// for CHIP_VER_BCM4330
-#define FW_VER_5_90_195_114                 20
-#define FW_VER_5_90_100_41                  21
+        case NEX_WRITE_TO_CONSOLE:
+            if (len > 0) {
+                arg[len-1] = 0;
+                printf("ioctl: %s\n", arg);
+                ret = IOCTL_SUCCESS; 
+            }
+            break;
 
-// for CHIP_VER_BCM4358
-#define FW_VER_7_112_200_17                 30
+        default:
+            ret = wlc_ioctl(wlc, cmd, arg, len, wlc_if);
+    }
 
-// for CHIP_VER_BCM43438
-#define FW_VER_7_45_41_26_r640327           40
+    return ret;
+}
 
+__attribute__((at(0x42924, "", CHIP_VER_BCM43438, FW_VER_7_45_41_26_r640327)))
+GenericPatch4(wlc_ioctl_hook, wlc_ioctl_hook + 1);
 
-#endif /*FIRMWARE_VERSION_H*/

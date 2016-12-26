@@ -32,30 +32,70 @@
  *                                                                         *
  **************************************************************************/
 
-#ifndef FIRMWARE_VERSION_H
-#define FIRMWARE_VERSION_H
+#pragma NEXMON targetregion "patch"
 
-#define CHIP_VER_ALL                        0
-#define CHIP_VER_BCM4339                    1
-#define CHIP_VER_BCM4330                    2
-#define CHIP_VER_BCM4358                    3
-#define CHIP_VER_BCM43438                   4
+#include <firmware_version.h>
+#include <wrapper.h>	// wrapper definitions for functions that already exist in the firmware
+#include <structs.h>	// structures that are used by the code in the firmware
+#include <patcher.h>
+#include <helper.h>
+#include <ieee80211_radiotap.h>
+#include <sendframe.h>
+#include "bcm43438.h"
+#include "d11.h"
+#include "brcm.h"
 
-#define FW_VER_ALL                          0
+int
+inject_frame(sk_buff *p) {
+    int rtap_len = 0;
 
-// for CHIP_VER_BCM4339
-#define FW_VER_6_37_32_RC23_34_40_r581243   10
-#define FW_VER_6_37_32_RC23_34_43_r639704   11
+    //needed for sending:
+    struct wlc_info *wlc = WLC_INFO_ADDR;
+    int data_rate = 0;
+    //Radiotap parsing:
+    struct ieee80211_radiotap_iterator iterator;
+    struct ieee80211_radiotap_header *rtap_header;
 
-// for CHIP_VER_BCM4330
-#define FW_VER_5_90_195_114                 20
-#define FW_VER_5_90_100_41                  21
+    //parse radiotap header
+    rtap_len = *((char *)(p->data + 2));
 
-// for CHIP_VER_BCM4358
-#define FW_VER_7_112_200_17                 30
+    rtap_header = (struct ieee80211_radiotap_header *) p->data;
 
-// for CHIP_VER_BCM43438
-#define FW_VER_7_45_41_26_r640327           40
+    int ret = ieee80211_radiotap_iterator_init(&iterator, rtap_header, rtap_len, 0);
 
+    while(!ret) {
+        ret = ieee80211_radiotap_iterator_next(&iterator);
+        if(ret) {
+            continue;
+        }
+        switch(iterator.this_arg_index) {
+            case IEEE80211_RADIOTAP_RATE:
+                data_rate = (*iterator.this_arg);
+                break;
+            case IEEE80211_RADIOTAP_CHANNEL:
+                //printf("Channel (freq): %d\n", iterator.this_arg[0] | (iterator.this_arg[1] << 8) );
+                break;
+            default:
+                //printf("default: %d\n", iterator.this_arg_index);
+                break;
+        }
+    }
+    
+    //remove radiotap header
+    skb_pull(p, rtap_len);
 
-#endif /*FIRMWARE_VERSION_H*/
+    //inject frame without using the queue
+    sendframe(wlc, p, 1, data_rate);
+
+    return 0;
+}
+
+int
+wlc_sdio_hook(int a1, int a2, struct sk_buff *p)
+{
+    inject_frame(p);
+    return 0;
+}
+
+__attribute__((at(0x7EF8, "", CHIP_VER_BCM43438, FW_VER_ALL)))
+BPatch(wlc_sdio_hook, wlc_sdio_hook);

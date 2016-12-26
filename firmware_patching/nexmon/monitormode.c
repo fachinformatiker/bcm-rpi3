@@ -32,30 +32,65 @@
  *                                                                         *
  **************************************************************************/
 
-#ifndef FIRMWARE_VERSION_H
-#define FIRMWARE_VERSION_H
+#pragma NEXMON targetregion "patch"
 
-#define CHIP_VER_ALL                        0
-#define CHIP_VER_BCM4339                    1
-#define CHIP_VER_BCM4330                    2
-#define CHIP_VER_BCM4358                    3
-#define CHIP_VER_BCM43438                   4
+#include <firmware_version.h>
+#include <wrapper.h>	// wrapper definitions for functions that already exist in the firmware
+#include <structs.h>	// structures that are used by the code in the firmware
+#include <patcher.h>
+#include <helper.h>
+#include "bcm43438.h"
+#include <ieee80211_radiotap.h>
+#include "d11.h"
+#include "brcm.h"
 
-#define FW_VER_ALL                          0
+struct brcmf_proto_bcdc_header {
+	unsigned char flags;
+	unsigned char priority;
+	unsigned char flags2;
+	unsigned char data_offset;
+};
 
-// for CHIP_VER_BCM4339
-#define FW_VER_6_37_32_RC23_34_40_r581243   10
-#define FW_VER_6_37_32_RC23_34_43_r639704   11
+struct bdc_radiotap_header {
+    struct brcmf_proto_bcdc_header bdc;
+    struct nexmon_radiotap_header radiotap;
+} __attribute__((packed));
 
-// for CHIP_VER_BCM4330
-#define FW_VER_5_90_195_114                 20
-#define FW_VER_5_90_100_41                  21
+void
+wl_monitor_hook(struct wl_info *wl, struct wl_rxsts *sts, struct sk_buff *p) {
+    struct sk_buff *p_new = pkt_buf_get_skb(OSL_INFO_ADDR, p->len + sizeof(struct bdc_radiotap_header));
+    struct bdc_radiotap_header *frame = (struct bdc_radiotap_header *) p_new->data;
 
-// for CHIP_VER_BCM4358
-#define FW_VER_7_112_200_17                 30
+    struct tsf tsf;
+	wlc_bmac_read_tsf(wl->wlc_hw, &tsf.tsf_l, &tsf.tsf_h);
 
-// for CHIP_VER_BCM43438
-#define FW_VER_7_45_41_26_r640327           40
+	memset(p_new->data, 0, sizeof(struct bdc_radiotap_header));
 
+    frame->bdc.flags = 0x20;
+    frame->bdc.priority = 0;
+    frame->bdc.flags2 = 0;
+    frame->bdc.data_offset = 0;
 
-#endif /*FIRMWARE_VERSION_H*/
+    frame->radiotap.header.it_version = 0;
+    frame->radiotap.header.it_pad = 0;
+    frame->radiotap.header.it_len = sizeof(struct nexmon_radiotap_header);
+    frame->radiotap.header.it_present = 
+          (1<<IEEE80211_RADIOTAP_TSFT) 
+        | (1<<IEEE80211_RADIOTAP_FLAGS)
+        | (1<<IEEE80211_RADIOTAP_CHANNEL)
+        | (1<<IEEE80211_RADIOTAP_DBM_ANTSIGNAL);
+    frame->radiotap.tsf.tsf_l = tsf.tsf_l;
+    frame->radiotap.tsf.tsf_h = tsf.tsf_h;
+    frame->radiotap.flags = IEEE80211_RADIOTAP_F_FCS;
+    frame->radiotap.chan_freq = wlc_phy_channel2freq(CHSPEC_CHANNEL(sts->chanspec));
+    frame->radiotap.chan_flags = 0;
+    frame->radiotap.dbm_antsignal = sts->rssi;
+	
+	memcpy(p_new->data + sizeof(struct bdc_radiotap_header), p->data + 6, p->len - 6);
+
+	p_new->len -= 6;
+	dngl_sendpkt(SDIO_INFO_ADDR, p_new, 2);
+}
+
+__attribute__((at(0x81F620, "flashpatch")))
+BLPatch(flash_patch_179, wl_monitor_hook);

@@ -32,30 +32,12 @@
  *                                                                         *
  **************************************************************************/
 
-#ifndef FIRMWARE_VERSION_H
-#define FIRMWARE_VERSION_H
+#ifndef SENDFRAME_H
+#define SENDFRAME_H
 
-#define CHIP_VER_ALL                        0
-#define CHIP_VER_BCM4339                    1
-#define CHIP_VER_BCM4330                    2
-#define CHIP_VER_BCM4358                    3
-#define CHIP_VER_BCM43438                   4
+#include <structs.h>
 
-#define FW_VER_ALL                          0
+void sendframe(struct wlc_info *wlc, struct sk_buff *p, unsigned int fifo, unsigned int rate);
+void sendframe_with_timer(struct wlc_info *wlc, struct sk_buff *p, unsigned int fifo, unsigned int rate, int txdelay, int txrepetitions, int txperiodicity);
 
-// for CHIP_VER_BCM4339
-#define FW_VER_6_37_32_RC23_34_40_r581243   10
-#define FW_VER_6_37_32_RC23_34_43_r639704   11
-
-// for CHIP_VER_BCM4330
-#define FW_VER_5_90_195_114                 20
-#define FW_VER_5_90_100_41                  21
-
-// for CHIP_VER_BCM4358
-#define FW_VER_7_112_200_17                 30
-
-// for CHIP_VER_BCM43438
-#define FW_VER_7_45_41_26_r640327           40
-
-
-#endif /*FIRMWARE_VERSION_H*/
+#endif /* SENDFRAME_H */

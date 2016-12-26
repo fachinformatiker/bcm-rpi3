@@ -32,30 +32,35 @@
  *                                                                         *
  **************************************************************************/
 
-#ifndef FIRMWARE_VERSION_H
-#define FIRMWARE_VERSION_H
+#pragma NEXMON targetregion "patch"
 
-#define CHIP_VER_ALL                        0
-#define CHIP_VER_BCM4339                    1
-#define CHIP_VER_BCM4330                    2
-#define CHIP_VER_BCM4358                    3
-#define CHIP_VER_BCM43438                   4
+#include <firmware_version.h>   // definition of firmware version macros
+#include <debug.h>              // contains macros to access the debug hardware
+#include <wrapper.h>            // wrapper definitions for functions that already exist in the firmware
+#include <structs.h>            // structures that are used by the code in the firmware
+#include <helper.h>             // useful helper functions
+#include <patcher.h>            // macros used to craete patches such as BLPatch, BPatch, ...
+#include <rates.h>              // rates used to build the ratespec for frame injection
+#include <nexioctls.h>          // ioctls added in the nexmon patch
+#include <capabilities.h>       // capabilities included in a nexmon patch
 
-#define FW_VER_ALL                          0
+void
+sendframe(struct wlc_info *wlc, struct sk_buff *p, unsigned int fifo, unsigned int rate)
+{
+    int short_preamble = 0;
+    struct wlc_txh_info txh = {0};
 
-// for CHIP_VER_BCM4339
-#define FW_VER_6_37_32_RC23_34_40_r581243   10
-#define FW_VER_6_37_32_RC23_34_43_r639704   11
-
-// for CHIP_VER_BCM4330
-#define FW_VER_5_90_195_114                 20
-#define FW_VER_5_90_100_41                  21
-
-// for CHIP_VER_BCM4358
-#define FW_VER_7_112_200_17                 30
-
-// for CHIP_VER_BCM43438
-#define FW_VER_7_45_41_26_r640327           40
-
-
-#endif /*FIRMWARE_VERSION_H*/
+    if(wlc->band->hwrs_scb) {
+        if (wlc->hw->up) {
+            wlc_d11hdrs(wlc, p, wlc->band->hwrs_scb, short_preamble, 0, 1, 1, 0, 0, rate);
+            p->scb = wlc->band->hwrs_scb;
+            wlc_get_txh_info(wlc, p, &txh);
+            wlc_txfifo(wlc, 1, p, &txh, 1, 1);
+        } else {
+            printf("ERR: wlc down\n");
+        }
+    } else {
+        printf("ERR: no scb found, discarding packet!\n");
+        pkt_buf_free_skb(wlc->osh, p, 0);
+    }
+}

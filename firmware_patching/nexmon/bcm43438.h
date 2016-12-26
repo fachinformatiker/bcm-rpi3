@@ -32,30 +32,12 @@
  *                                                                         *
  **************************************************************************/
 
-#ifndef FIRMWARE_VERSION_H
-#define FIRMWARE_VERSION_H
+#ifndef BCM43438_H
+#define BCM43438_H
 
-#define CHIP_VER_ALL                        0
-#define CHIP_VER_BCM4339                    1
-#define CHIP_VER_BCM4330                    2
-#define CHIP_VER_BCM4358                    3
-#define CHIP_VER_BCM43438                   4
+/* addresses of static structs */
+#define SDIO_INFO_ADDR			((void *) 0x6c5a8)
+#define OSL_INFO_ADDR           ((void *) 0x6b950)
+#define WLC_INFO_ADDR           ((void *) 0x6ad6c)
 
-#define FW_VER_ALL                          0
-
-// for CHIP_VER_BCM4339
-#define FW_VER_6_37_32_RC23_34_40_r581243   10
-#define FW_VER_6_37_32_RC23_34_43_r639704   11
-
-// for CHIP_VER_BCM4330
-#define FW_VER_5_90_195_114                 20
-#define FW_VER_5_90_100_41                  21
-
-// for CHIP_VER_BCM4358
-#define FW_VER_7_112_200_17                 30
-
-// for CHIP_VER_BCM43438
-#define FW_VER_7_45_41_26_r640327           40
-
-
-#endif /*FIRMWARE_VERSION_H*/
+#endif /*BCM43438_H*/

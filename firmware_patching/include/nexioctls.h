@@ -32,30 +32,19 @@
  *                                                                         *
  **************************************************************************/
 
-#ifndef FIRMWARE_VERSION_H
-#define FIRMWARE_VERSION_H
+#define IOCTL_ERROR						-23
+#define IOCTL_SUCCESS					0
 
-#define CHIP_VER_ALL                        0
-#define CHIP_VER_BCM4339                    1
-#define CHIP_VER_BCM4330                    2
-#define CHIP_VER_BCM4358                    3
-#define CHIP_VER_BCM43438                   4
-
-#define FW_VER_ALL                          0
-
-// for CHIP_VER_BCM4339
-#define FW_VER_6_37_32_RC23_34_40_r581243   10
-#define FW_VER_6_37_32_RC23_34_43_r639704   11
-
-// for CHIP_VER_BCM4330
-#define FW_VER_5_90_195_114                 20
-#define FW_VER_5_90_100_41                  21
-
-// for CHIP_VER_BCM4358
-#define FW_VER_7_112_200_17                 30
-
-// for CHIP_VER_BCM43438
-#define FW_VER_7_45_41_26_r640327           40
-
-
-#endif /*FIRMWARE_VERSION_H*/
+// IOCTLs used by Nexmon
+#define NEX_GET_CAPABILITIES			400
+#define NEX_WRITE_TO_CONSOLE			401
+#define NEX_CT_EXPERIMENTS				402
+#define NEX_GET_CONSOLE					403
+#define NEX_GET_PHYREG					404
+#define NEX_SET_PHYREG					405
+#define NEX_READ_OBJMEM					406
+#define NEX_WRITE_OBJMEM				407
+#define NEX_INJECT_FRAME				408
+#define NEX_PRINT_TIMERS				409
+#define NEX_GET_SECURITYCOOKIE			410
+#define NEX_SET_SECURITYCOOKIE			411
