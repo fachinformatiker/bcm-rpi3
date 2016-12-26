@@ -617,7 +617,7 @@ brcmf_cfg80211_nexmon_set_channel(struct wiphy *wiphy,struct cfg80211_chan_def *
     s32 err = 0;
     u16 chanspec;
 
-    brcmf_err("DEBUG NexMon: brcmf_cfg80211_nexmon_set_channel() called!\n");
+    //brcmf_err("DEBUG NexMon: brcmf_cfg80211_nexmon_set_channel() called!\n");
     chanspec = chandef_to_chanspec(&cfg->d11inf, chandef);
     err = brcmf_fil_iovar_int_set(ifp, "chanspec", chanspec);
     if (err < 0) {
@@ -4716,7 +4716,7 @@ static struct cfg80211_ops wl_cfg80211_ops = {
 	.crit_proto_start = brcmf_cfg80211_crit_proto_start,
 	.crit_proto_stop = brcmf_cfg80211_crit_proto_stop,
 	.tdls_oper = brcmf_cfg80211_tdls_oper,
-        .set_monitor_channel = brcmf_cfg80211_nexmon_set_channel,
+    .set_monitor_channel = brcmf_cfg80211_nexmon_set_channel,
 };
 
 struct brcmf_cfg80211_vif *brcmf_alloc_vif(struct brcmf_cfg80211_info *cfg,
