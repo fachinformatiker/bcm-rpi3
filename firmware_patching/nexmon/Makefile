@@ -32,7 +32,6 @@ brcmfmac/brcmfmac.ko: check-nexmon-setup-env
 	make -C ../../buildtools/gcc-nexmon-plugin/
 ifneq ($(shell uname -m),armv7l)
 	echo "Building on x86"
-	make -C ../../kernel/ re4son_pi2_defconfig
 	make -C ../../kernel/ -j4 zImage modules dtbs
 	make -C ../../kernel/ M=$$PWD/brcmfmac -j2
 	make -C ../../kernel/ modules_install INSTALL_MOD_PATH=$$PWD/modules
